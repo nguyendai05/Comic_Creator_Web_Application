@@ -186,3 +186,85 @@ export interface EpisodeFullResponse {
   characters: Character[];
   comments: any[];
 }
+
+// ============================================
+// AI GENERATION
+// ============================================
+
+export interface PanelGenerationInput {
+  scene_description: string;
+  characters?: {
+    character_id: string;
+    expression: string;
+    pose: string;
+  }[];
+  style: {
+    base: string;
+    quality: 'standard' | 'high';
+    color_treatment?: string;
+  };
+  panel: {
+    camera_angle: string;
+    aspect_ratio: string;
+    shot_type?: string;
+  };
+}
+
+export interface AIJobInput {
+  job_type: 'panel_generation' | 'character_generation' | 'batch_generation';
+  panel_id?: string;
+  input: PanelGenerationInput;
+}
+
+export interface AIJob {
+  job_id: string;
+  status: 'pending' | 'processing' | 'success' | 'failed';
+  estimated_credits?: number;
+  estimated_duration_seconds?: number;
+  progress?: number;
+  result?: {
+    image_url: string;
+    thumbnail_url: string;
+    width: number;
+    height: number;
+    prompt_used: string;
+    generation_metadata?: any;
+  };
+  error?: {
+    code: string;
+    message: string;
+    suggestions?: string[];
+  };
+  created_at: string;
+  started_at?: string;
+  finished_at?: string;
+}
+
+// ============================================
+// CREDITS
+// ============================================
+
+export interface CreditTransaction {
+  tx_id: string;
+  user_id: string;
+  amount: number;
+  balance_after: number;
+  reason: string;
+  metadata?: any;
+  created_at: string;
+}
+
+// ============================================
+// EXPORT
+// ============================================
+
+export interface ExportJob {
+  export_id: string;
+  status: 'pending' | 'processing' | 'success' | 'failed';
+  estimated_duration?: number;
+  progress?: number;
+  result_url?: string;
+  error_message?: string;
+  created_at?: string;
+  finished_at?: string;
+}
