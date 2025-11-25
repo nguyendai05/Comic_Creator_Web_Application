@@ -47,6 +47,7 @@ interface EditorState {
 
     // Text Operations
     addText: (panelId: string, text: Omit<TextElement, 'text_id' | 'panel_id' | 'created_at'>) => void;
+    addTextToPanel: (panelId: string, type: TextElement['text_type'], bubbleStyle?: string) => void;
     updateText: (textId: string, updates: Partial<TextElement>) => void;
     deleteText: (textId: string) => void;
 
@@ -336,6 +337,27 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         console.log('📝 Added text:', newText.text_id);
     },
 
+    addTextToPanel: (panelId: string, type: TextElement['text_type'], bubbleStyle?: string) => {
+        const panel = get().getCurrentPanel();
+        if (!panel) return;
+
+        const style = getDefaultStyleForType(type, bubbleStyle);
+
+        const newText: Omit<TextElement, 'text_id' | 'panel_id' | 'created_at'> = {
+            text_type: type,
+            content: type === 'sfx' ? 'BOOM!' : 'Enter text...',
+            position: {
+                x: panel.position.width / 2 - 50,
+                y: panel.position.height / 2 - 20,
+                width: 100,
+                height: 40,
+            },
+            style: style,
+        };
+
+        get().addText(panelId, newText);
+    },
+
     // Update text element
     updateText: (textId: string, updates: Partial<TextElement>) => {
         set((state) => ({
@@ -399,6 +421,61 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         return currentPage.panels.find(p => p.panel_id === selectedPanelId) || null;
     }
 }));
+
+function getDefaultStyleForType(type: string, bubbleStyle?: string) {
+    if (bubbleStyle === 'thought') {
+        return {
+            font_family: 'Comic Sans MS',
+            font_size: 14,
+            color: '#000000',
+            font_style: 'italic',
+            bubble_style: 'thought',
+            bubble_color: '#FFFFFF',
+            bubble_border_color: '#000000',
+            bubble_border_width: 2,
+        };
+    }
+
+    switch (type) {
+        case 'dialogue':
+            return {
+                font_family: 'Comic Sans MS',
+                font_size: 14,
+                color: '#000000',
+                bubble_style: 'speech',
+                bubble_color: '#FFFFFF',
+                bubble_border_color: '#000000',
+                bubble_border_width: 2,
+                tail_position: 'bottom' as const,
+            };
+        case 'narration':
+            return {
+                font_family: 'Georgia',
+                font_size: 12,
+                color: '#333333',
+                bubble_style: 'narration',
+                bubble_color: '#FFF9E6',
+                bubble_border_color: '#D4A574',
+                bubble_border_width: 1,
+            };
+        case 'sfx':
+            return {
+                font_family: 'Impact',
+                font_size: 24,
+                color: '#FF0000',
+                bold: true,
+                bubble_style: 'sfx',
+                bubble_color: 'transparent',
+                bubble_border_color: 'transparent',
+            };
+        default:
+            return {
+                font_family: 'Arial',
+                font_size: 14,
+                color: '#000000',
+            };
+    }
+}
 
 // Helper hooks
 export const useCurrentPage = () => {

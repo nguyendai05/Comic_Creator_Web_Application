@@ -153,6 +153,7 @@ export interface TextElement {
     bubble_color?: string;
     bubble_border_color?: string;
     bubble_border_width?: number;
+    tail_position?: 'top' | 'bottom' | 'left' | 'right' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
   };
   character_id?: string;
   created_at: string;

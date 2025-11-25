@@ -355,6 +355,16 @@ export const mockApi = {
         const jobId = generateId();
         const estimatedCredits = input.job_type === 'panel_generation' ? 1 : 2;
 
+        // Deduct credits
+        const storedCredits = localStorage.getItem('mock-credits');
+        const currentBalance = storedCredits ? parseInt(storedCredits, 10) : 100;
+
+        if (currentBalance < estimatedCredits) {
+            throw new Error('Insufficient credits');
+        }
+
+        localStorage.setItem('mock-credits', (currentBalance - estimatedCredits).toString());
+
         const job: AIJob = {
             job_id: jobId,
             status: 'pending',
@@ -504,11 +514,21 @@ export const mockApi = {
     /**
      * Get user's credit balance
      */
+    /**
+     * Get user's credit balance
+     */
     async getCredits(): Promise<{ credits_balance: number }> {
         await mockDelay(100);
 
-        // In production, would get from user session
-        return { credits_balance: 100 };
+        // Get from localStorage or default to 100
+        const stored = localStorage.getItem('mock-credits');
+        const balance = stored ? parseInt(stored, 10) : 100;
+
+        if (!stored) {
+            localStorage.setItem('mock-credits', balance.toString());
+        }
+
+        return { credits_balance: balance };
     },
 
     /**

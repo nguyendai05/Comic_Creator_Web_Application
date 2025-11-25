@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
     ArrowLeft,
@@ -9,17 +9,24 @@ import {
     Settings,
     Loader2,
     Plus,
-    AlertCircle
+    AlertCircle,
+    Download
 } from 'lucide-react';
 import { useEditorStore } from '@/stores/editorStore';
 import { PageListItem } from '@/components/editor/PageListItem';
 import { PanelCanvas } from '@/components/editor/PanelCanvas';
 import { PropertiesPanel } from '@/components/editor/PropertiesPanel';
-import { AnimatePresence } from 'framer-motion';
+import { ExportDialog } from '@/components/editor/ExportDialog';
+import { AnimatePresence, motion } from 'framer-motion';
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
+import { toast } from 'react-hot-toast';
 
 export function EditorPage() {
     const { seriesId, episodeId } = useParams<{ seriesId: string; episodeId: string }>();
     const navigate = useNavigate();
+    const [showExportDialog, setShowExportDialog] = useState(false);
+
+    useKeyboardShortcuts();
 
     const {
         episode,
@@ -56,8 +63,28 @@ export function EditorPage() {
     const handleSave = async () => {
         try {
             await saveEpisode();
+            toast.success('Saved successfully!', {
+                style: {
+                    background: '#1F2937',
+                    color: '#fff',
+                    borderRadius: '8px',
+                    border: '1px solid #374151',
+                },
+                iconTheme: {
+                    primary: '#10B981',
+                    secondary: '#fff',
+                },
+            });
         } catch (error) {
             console.error('Save failed:', error);
+            toast.error('Failed to save', {
+                style: {
+                    background: '#1F2937',
+                    color: '#fff',
+                    borderRadius: '8px',
+                    border: '1px solid #374151',
+                },
+            });
         }
     };
 
@@ -167,22 +194,32 @@ export function EditorPage() {
                 {/* Right Section */}
                 <div className="flex items-center gap-3">
                     <button
+                        onClick={() => setShowExportDialog(true)}
+                        className="flex items-center gap-2 px-3 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                    >
+                        <Download className="w-4 h-4" />
+                        Export
+                    </button>
+
+                    <motion.button
                         onClick={handleSave}
                         disabled={isSaving || !isDirty}
+                        animate={isDirty ? { scale: [1, 1.02, 1] } : {}}
+                        transition={{ repeat: Infinity, duration: 2 }}
                         className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         {isSaving ? (
                             <>
                                 <Loader2 className="w-4 h-4 animate-spin" />
-                                Saving...
+                                <span className="hidden sm:inline">Saving...</span>
                             </>
                         ) : (
                             <>
                                 <Save className="w-4 h-4" />
-                                Save
+                                <span className="hidden sm:inline">Save</span>
                             </>
                         )}
-                    </button>
+                    </motion.button>
 
                     <button
                         className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
@@ -192,6 +229,14 @@ export function EditorPage() {
                     </button>
                 </div>
             </header>
+
+            <ExportDialog
+                isOpen={showExportDialog}
+                onClose={() => setShowExportDialog(false)}
+                episodeId={episode.episode_id}
+                episode={episode}
+                pages={pages}
+            />
 
             {/* Main Editor Area */}
             <div className="flex-1 flex overflow-hidden">

@@ -5,7 +5,6 @@ import { DashboardPage } from '@/pages/DashboardPage';
 import { SeriesDetailPage } from '@/pages/SeriesDetailPage';
 import { EditorPage } from '@/pages/EditorPage';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
-import { EditorPage } from '@/pages/EditorPage';
 import { useAuthStore } from '@/stores/authStore';
 
 function App() {

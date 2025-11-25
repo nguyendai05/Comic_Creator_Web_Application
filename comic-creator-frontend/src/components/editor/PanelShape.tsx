@@ -3,6 +3,7 @@ import { Group, Rect, Image as KonvaImage, Text } from 'react-konva';
 import { Group as KonvaGroup } from 'konva/lib/Group';
 import type { Panel } from '@/types';
 import { useEditorStore } from '@/stores/editorStore';
+import { TextBubble } from './TextBubble';
 
 interface PanelShapeProps {
     panel: Panel;
@@ -143,11 +144,11 @@ export function PanelShape({ panel, isSelected, onClick }: PanelShapeProps) {
                 fill={imageLoaded ? undefined : '#f5f5f5'}
                 stroke={isSelected ? '#3B82F6' : '#000000'}
                 strokeWidth={isSelected ? 3 : 2}
-                shadowColor="black"
-                shadowBlur={isSelected ? 8 : 4}
-                shadowOpacity={isSelected ? 0.4 : 0.2}
+                shadowColor={isSelected ? '#3B82F6' : 'black'}
+                shadowBlur={isSelected ? 20 : 4}
+                shadowOpacity={isSelected ? 0.3 : 0.2}
                 shadowOffsetX={0}
-                shadowOffsetY={2}
+                shadowOffsetY={isSelected ? 0 : 2}
                 cornerRadius={2}
             />
 
@@ -210,6 +211,28 @@ export function PanelShape({ panel, isSelected, onClick }: PanelShapeProps) {
                     align="center"
                     verticalAlign="middle"
                 />
+            </Group>
+
+            {/* Text Elements */}
+            <Group x={x} y={y}>
+                {panel.text_elements?.map((textEl) => (
+                    <TextBubble
+                        key={textEl.text_id}
+                        textElement={textEl}
+                        isSelected={textEl.text_id === useEditorStore.getState().selectedTextId}
+                        onSelect={() => {
+                            useEditorStore.getState().selectText(textEl.text_id);
+                        }}
+                        onUpdate={(updates) => useEditorStore.getState().updateText(textEl.text_id, updates)}
+                        onDelete={() => useEditorStore.getState().deleteText(textEl.text_id)}
+                        panelBounds={{
+                            x: 0,
+                            y: 0,
+                            width: width,
+                            height: height,
+                        }}
+                    />
+                ))}
             </Group>
 
             {/* Selection indicator */}

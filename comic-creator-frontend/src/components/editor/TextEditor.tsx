@@ -1,255 +1,299 @@
 import { useState, useEffect } from 'react';
+import type { TextElement, Character } from '@/types';
 import {
   Bold,
   Italic,
-  Palette
+  Trash2,
+  Type,
+  MessageSquare,
+  Cloud,
+  Square,
+  Zap,
+  ArrowDownLeft,
+  ArrowDown,
+  ArrowDownRight,
+  ArrowLeft,
+  ArrowRight,
+  ArrowUpLeft,
+  ArrowUp,
+  ArrowUpRight
 } from 'lucide-react';
-import type { TextElement } from '@/types';
-import { BubbleStylePicker } from './BubbleStylePicker';
 
 interface TextEditorProps {
-  textElement: TextElement | null;
+  textElement: TextElement;
+  characters: Character[];
   onUpdate: (updates: Partial<TextElement>) => void;
-  onClose: () => void;
+  onDelete: () => void;
 }
 
-export function TextEditor({ textElement, onUpdate, onClose }: TextEditorProps) {
-  const [content, setContent] = useState('');
-  const [fontSize, setFontSize] = useState(16);
-  const [fontFamily, setFontFamily] = useState('Arial');
-  const [color, setColor] = useState('#000000');
-  const [bold, setBold] = useState(false);
-  const [italic, setItalic] = useState(false);
-  const [showColorPicker, setShowColorPicker] = useState(false);
-  const [showBubblePicker, setShowBubblePicker] = useState(false);
+const FONTS = [
+  'Arial',
+  'Comic Sans MS',
+  'Courier New',
+  'Georgia',
+  'Helvetica',
+  'Impact',
+  'Times New Roman',
+  'Verdana',
+];
 
+const COLORS = [
+  '#000000', '#FFFFFF', '#FF0000', '#00FF00', '#0000FF',
+  '#FFFF00', '#00FFFF', '#FF00FF', '#C0C0C0', '#808080',
+  '#800000', '#808000', '#008000', '#800080', '#008080', '#000080'
+];
+
+export function TextEditor({
+  textElement,
+  characters,
+  onUpdate,
+  onDelete
+}: TextEditorProps) {
+  const [localContent, setLocalContent] = useState(textElement.content);
+
+  // Sync local content when external prop changes
   useEffect(() => {
-    if (textElement) {
-      setContent(textElement.content);
-      setFontSize(textElement.style?.font_size || 16);
-      setFontFamily(textElement.style?.font_family || 'Arial');
-      setColor(textElement.style?.color || '#000000');
-      setBold(textElement.style?.bold || false);
-      setItalic(textElement.style?.italic || false);
-    }
-  }, [textElement]);
+    setLocalContent(textElement.content);
+  }, [textElement.content]);
 
-  if (!textElement) return null;
+  // Debounce content update
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (localContent !== textElement.content) {
+        onUpdate({ content: localContent });
+      }
+    }, 300);
 
-  const handleContentChange = (newContent: string) => {
-    setContent(newContent);
-    onUpdate({
-      content: newContent
-    });
-  };
+    return () => clearTimeout(timer);
+  }, [localContent, onUpdate, textElement.content]);
 
-  const handleStyleChange = (styleUpdates: any) => {
+  const handleStyleUpdate = (key: keyof typeof textElement.style, value: any) => {
     onUpdate({
       style: {
         ...textElement.style,
-        ...styleUpdates
+        [key]: value
       }
     });
   };
 
-  const toggleBold = () => {
-    const newBold = !bold;
-    setBold(newBold);
-    handleStyleChange({ bold: newBold });
-  };
-
-  const toggleItalic = () => {
-    const newItalic = !italic;
-    setItalic(newItalic);
-    handleStyleChange({ italic: newItalic });
-  };
-
-  const handleFontSizeChange = (newSize: number) => {
-    setFontSize(newSize);
-    handleStyleChange({ font_size: newSize });
-  };
-
-  const handleColorChange = (newColor: string) => {
-    setColor(newColor);
-    handleStyleChange({ color: newColor });
-  };
-
-  const handleBubbleStyleChange = (bubbleUpdates: any) => {
-    handleStyleChange(bubbleUpdates);
-    setShowBubblePicker(false);
-  };
-
-  const fonts = [
-    'Arial',
-    'Comic Sans MS',
-    'Impact',
-    'Times New Roman',
-    'Courier New',
-    'Georgia'
-  ];
-
   return (
-    <div className="bg-gray-800 border-l border-gray-700">
-      <div className="p-4">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-white font-medium">Text Editor</h3>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-white"
+    <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 space-y-6 text-sm">
+      <div className="flex justify-between items-center border-b pb-2">
+        <h3 className="font-semibold text-gray-800">Text Editor</h3>
+        <button
+          onClick={onDelete}
+          className="text-red-500 hover:text-red-700 p-1 rounded hover:bg-red-50"
+          title="Delete Text"
+        >
+          <Trash2 size={16} />
+        </button>
+      </div>
+
+      {/* Content Input */}
+      <div className="space-y-2">
+        <label className="block font-medium text-gray-700">Content</label>
+        <textarea
+          value={localContent}
+          onChange={(e) => setLocalContent(e.target.value)}
+          className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[80px]"
+          placeholder="Enter text..."
+        />
+      </div>
+
+      {/* Type & Character */}
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1">
+          <label className="block text-xs font-medium text-gray-500">Type</label>
+          <select
+            value={textElement.text_type}
+            onChange={(e) => onUpdate({ text_type: e.target.value as any })}
+            className="w-full p-1.5 border border-gray-300 rounded text-sm"
           >
-            ✕
-          </button>
+            <option value="dialogue">Dialogue</option>
+            <option value="narration">Narration</option>
+            <option value="sfx">SFX</option>
+          </select>
         </div>
 
-        {/* Text Type Badge */}
-        <div className="mb-4">
-          <span className={`inline-block px-3 py-1 rounded text-sm font-medium ${
-            textElement.text_type === 'dialogue'
-              ? 'bg-blue-600 text-white'
-              : textElement.text_type === 'narration'
-              ? 'bg-purple-600 text-white'
-              : 'bg-orange-600 text-white'
-          }`}>
-            {textElement.text_type.toUpperCase()}
-          </span>
+        <div className="space-y-1">
+          <label className="block text-xs font-medium text-gray-500">Character</label>
+          <select
+            value={textElement.character_id || ''}
+            onChange={(e) => onUpdate({ character_id: e.target.value || undefined })}
+            className="w-full p-1.5 border border-gray-300 rounded text-sm"
+          >
+            <option value="">Select...</option>
+            {characters.map(char => (
+              <option key={char.character_id} value={char.character_id}>
+                {char.name}
+              </option>
+            ))}
+          </select>
         </div>
+      </div>
 
-        {/* Content Textarea */}
-        <div className="mb-4">
-          <label className="block text-sm text-gray-400 mb-2">Content</label>
-          <textarea
-            value={content}
-            onChange={(e) => handleContentChange(e.target.value)}
-            className="w-full bg-gray-700 text-white rounded-lg px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
-            rows={4}
-            placeholder="Enter text..."
-          />
-        </div>
+      {/* Font Styling */}
+      <div className="space-y-3 border-t pt-4">
+        <h4 className="font-medium text-gray-700 flex items-center gap-2">
+          <Type size={14} /> Font
+        </h4>
 
-        {/* Font Controls */}
-        <div className="space-y-3 mb-4">
-          {/* Font Family */}
-          <div>
-            <label className="block text-sm text-gray-400 mb-2">Font</label>
+        <div className="grid grid-cols-2 gap-2">
+          <div className="col-span-2">
             <select
-              value={fontFamily}
-              onChange={(e) => {
-                setFontFamily(e.target.value);
-                handleStyleChange({ font_family: e.target.value });
-              }}
-              className="w-full bg-gray-700 text-white rounded-lg px-3 py-2 border border-gray-600"
+              value={textElement.style.font_family}
+              onChange={(e) => handleStyleUpdate('font_family', e.target.value)}
+              className="w-full p-1.5 border border-gray-300 rounded text-sm"
             >
-              {fonts.map((font) => (
-                <option key={font} value={font}>
-                  {font}
-                </option>
+              {FONTS.map(font => (
+                <option key={font} value={font}>{font}</option>
               ))}
             </select>
           </div>
 
-          {/* Font Size */}
-          <div>
-            <label className="block text-sm text-gray-400 mb-2">
-              Size: {fontSize}px
-            </label>
+          <div className="flex items-center gap-2">
             <input
-              type="range"
-              min="12"
-              max="48"
-              value={fontSize}
-              onChange={(e) => handleFontSizeChange(Number(e.target.value))}
-              className="w-full"
+              type="number"
+              value={textElement.style.font_size}
+              onChange={(e) => handleStyleUpdate('font_size', Number(e.target.value))}
+              className="w-16 p-1.5 border border-gray-300 rounded text-sm"
+              min="8"
+              max="120"
             />
+            <span className="text-xs text-gray-500">px</span>
+          </div>
+
+          <div className="flex gap-1 justify-end">
+            <button
+              onClick={() => handleStyleUpdate('bold', !textElement.style.bold)}
+              className={`p-1.5 rounded border ${textElement.style.bold ? 'bg-blue-100 border-blue-300 text-blue-700' : 'bg-gray-50 border-gray-200 text-gray-600'}`}
+              title="Bold"
+            >
+              <Bold size={16} />
+            </button>
+            <button
+              onClick={() => handleStyleUpdate('italic', !textElement.style.italic)}
+              className={`p-1.5 rounded border ${textElement.style.italic ? 'bg-blue-100 border-blue-300 text-blue-700' : 'bg-gray-50 border-gray-200 text-gray-600'}`}
+              title="Italic"
+            >
+              <Italic size={16} />
+            </button>
           </div>
         </div>
 
-        {/* Text Style Buttons */}
-        <div className="flex gap-2 mb-4">
-          <button
-            onClick={toggleBold}
-            className={`flex-1 p-2 rounded-lg border transition-colors ${
-              bold
-                ? 'bg-blue-600 border-blue-500 text-white'
-                : 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600'
-            }`}
-          >
-            <Bold className="w-5 h-5 mx-auto" />
-          </button>
-          <button
-            onClick={toggleItalic}
-            className={`flex-1 p-2 rounded-lg border transition-colors ${
-              italic
-                ? 'bg-blue-600 border-blue-500 text-white'
-                : 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600'
-            }`}
-          >
-            <Italic className="w-5 h-5 mx-auto" />
-          </button>
-        </div>
-
-        {/* Color Picker */}
-        <div className="mb-4">
-          <label className="block text-sm text-gray-400 mb-2">Text Color</label>
-          <div className="flex gap-2">
-            <div
-              className="w-10 h-10 rounded border-2 border-gray-600 cursor-pointer"
-              style={{ backgroundColor: color }}
-              onClick={() => setShowColorPicker(!showColorPicker)}
-            />
+        <div className="space-y-1">
+          <label className="block text-xs font-medium text-gray-500">Color</label>
+          <div className="flex flex-wrap gap-1">
+            {COLORS.slice(0, 8).map(color => (
+              <button
+                key={color}
+                onClick={() => handleStyleUpdate('color', color)}
+                className={`w-6 h-6 rounded-full border ${textElement.style.color === color ? 'ring-2 ring-blue-500 ring-offset-1' : 'border-gray-300'}`}
+                style={{ backgroundColor: color }}
+                title={color}
+              />
+            ))}
             <input
               type="color"
-              value={color}
-              onChange={(e) => handleColorChange(e.target.value)}
-              className="flex-1 bg-gray-700 rounded-lg border border-gray-600"
+              value={textElement.style.color}
+              onChange={(e) => handleStyleUpdate('color', e.target.value)}
+              className="w-6 h-6 p-0 border-0 rounded-full overflow-hidden cursor-pointer"
             />
           </div>
         </div>
+      </div>
 
-        {/* Bubble Style Button (only for dialogue) */}
-        {textElement.text_type === 'dialogue' && (
-          <div className="mb-4">
+      {/* Bubble Style */}
+      <div className="space-y-3 border-t pt-4">
+        <h4 className="font-medium text-gray-700">Bubble Style</h4>
+
+        <div className="grid grid-cols-2 gap-2">
+          {[
+            { id: 'speech', label: 'Speech', icon: MessageSquare },
+            { id: 'thought', label: 'Thought', icon: Cloud },
+            { id: 'narration', label: 'Narration', icon: Square },
+            { id: 'sfx', label: 'SFX', icon: Zap },
+          ].map(style => (
             <button
-              onClick={() => setShowBubblePicker(!showBubblePicker)}
-              className="w-full py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors flex items-center justify-center gap-2"
+              key={style.id}
+              onClick={() => {
+                if (style.id === 'narration' || style.id === 'sfx') {
+                  onUpdate({ text_type: style.id as any });
+                } else {
+                  onUpdate({
+                    text_type: 'dialogue',
+                    style: { ...textElement.style, bubble_style: style.id }
+                  });
+                }
+              }}
+              className={`flex items-center gap-2 p-2 rounded border text-sm ${(textElement.text_type === style.id) ||
+                (textElement.text_type === 'dialogue' && textElement.style.bubble_style === style.id && (style.id === 'speech' || style.id === 'thought'))
+                ? 'bg-blue-50 border-blue-300 text-blue-700'
+                : 'bg-white border-gray-200 hover:bg-gray-50'
+                }`}
             >
-              <Palette className="w-4 h-4" />
-              Bubble Style
+              <style.icon size={14} />
+              {style.label}
             </button>
+          ))}
+        </div>
 
-            {showBubblePicker && (
-              <div className="mt-2">
-                <BubbleStylePicker
-                  currentStyle={textElement.style}
-                  onChange={handleBubbleStyleChange}
-                />
-              </div>
-            )}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <label className="block text-xs font-medium text-gray-500">Fill</label>
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                value={textElement.style.bubble_color || '#FFFFFF'}
+                onChange={(e) => handleStyleUpdate('bubble_color', e.target.value)}
+                className="w-8 h-8 p-0 border border-gray-300 rounded cursor-pointer"
+              />
+              <span className="text-xs text-gray-500 uppercase">{textElement.style.bubble_color || '#FFFFFF'}</span>
+            </div>
           </div>
-        )}
-
-        {/* Position & Size */}
-        <div className="mb-4">
-          <label className="block text-sm text-gray-400 mb-2">Position & Size</label>
-          <div className="grid grid-cols-2 gap-2 text-xs">
-            <div>
-              <span className="text-gray-500">X:</span>
-              <span className="text-white ml-1">{textElement.position.x.toFixed(0)}</span>
-            </div>
-            <div>
-              <span className="text-gray-500">Y:</span>
-              <span className="text-white ml-1">{textElement.position.y.toFixed(0)}</span>
-            </div>
-            <div>
-              <span className="text-gray-500">W:</span>
-              <span className="text-white ml-1">{textElement.position.width.toFixed(0)}</span>
-            </div>
-            <div>
-              <span className="text-gray-500">H:</span>
-              <span className="text-white ml-1">{textElement.position.height.toFixed(0)}</span>
+          <div className="space-y-1">
+            <label className="block text-xs font-medium text-gray-500">Border</label>
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                value={textElement.style.bubble_border_color || '#000000'}
+                onChange={(e) => handleStyleUpdate('bubble_border_color', e.target.value)}
+                className="w-8 h-8 p-0 border border-gray-300 rounded cursor-pointer"
+              />
+              <span className="text-xs text-gray-500 uppercase">{textElement.style.bubble_border_color || '#000000'}</span>
             </div>
           </div>
         </div>
+
+        {textElement.text_type === 'dialogue' && textElement.style.bubble_style !== 'thought' && (
+          <div className="space-y-2 pt-2">
+            <label className="block text-xs font-medium text-gray-500">Tail Position</label>
+            <div className="grid grid-cols-4 gap-1">
+              {[
+                { id: 'top-left', icon: ArrowUpLeft },
+                { id: 'top', icon: ArrowUp },
+                { id: 'top-right', icon: ArrowUpRight },
+                { id: 'left', icon: ArrowLeft },
+                { id: 'right', icon: ArrowRight },
+                { id: 'bottom-left', icon: ArrowDownLeft },
+                { id: 'bottom', icon: ArrowDown },
+                { id: 'bottom-right', icon: ArrowDownRight },
+              ].map(pos => (
+                <button
+                  key={pos.id}
+                  onClick={() => handleStyleUpdate('tail_position', pos.id)}
+                  className={`p-1.5 flex justify-center items-center rounded border ${textElement.style.tail_position === pos.id
+                    ? 'bg-blue-100 border-blue-300 text-blue-700'
+                    : 'bg-white border-gray-200 hover:bg-gray-50'
+                    }`}
+                  title={pos.id}
+                >
+                  <pos.icon size={14} />
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -1,16 +1,20 @@
+import { useState } from 'react';
 import {
     Plus,
     Trash2,
     Copy,
     Square,
     Maximize,
-    Grid3x3
+    Grid3x3,
+    MessageSquare
 } from 'lucide-react';
 import { useEditorStore, useCurrentPage } from '@/stores/editorStore';
+import { TextTypePicker } from './TextTypePicker';
 
 export function PanelToolbar() {
     const currentPage = useCurrentPage();
-    const { selectedPanelId, deletePanel } = useEditorStore();
+    const [showTextTypePicker, setShowTextTypePicker] = useState(false);
+    const { selectedPanelId, deletePanel, addTextToPanel } = useEditorStore();
 
     const selectedPanel = currentPage?.panels.find(p => p.panel_id === selectedPanelId);
 
@@ -101,6 +105,31 @@ export function PanelToolbar() {
                         Splash Page
                     </button>
                 </div>
+            </div>
+
+            <div className="h-6 w-px bg-gray-700" />
+
+            {/* Add Text Button */}
+            <div className="relative">
+                <button
+                    onClick={() => setShowTextTypePicker(!showTextTypePicker)}
+                    disabled={!selectedPanelId}
+                    className="px-3 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    title="Add Text"
+                >
+                    <MessageSquare className="w-4 h-4" />
+                    Add Text
+                </button>
+
+                {showTextTypePicker && selectedPanelId && (
+                    <TextTypePicker
+                        onSelect={(type, bubbleStyle) => {
+                            addTextToPanel(selectedPanelId, type, bubbleStyle);
+                            setShowTextTypePicker(false);
+                        }}
+                        onClose={() => setShowTextTypePicker(false)}
+                    />
+                )}
             </div>
 
             <div className="h-6 w-px bg-gray-700" />
