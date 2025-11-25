@@ -3,6 +3,7 @@ import { LoginPage } from '@/pages/LoginPage';
 import { RegisterPage } from '@/pages/RegisterPage';
 import { DashboardPage } from '@/pages/DashboardPage';
 import { SeriesDetailPage } from '@/pages/SeriesDetailPage';
+import { EditorPage } from '@/pages/EditorPage';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { useAuthStore } from '@/stores/authStore';
 
@@ -40,6 +41,14 @@ function App() {
           element={
             <ProtectedRoute>
               <SeriesDetailPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/series/:seriesId/episode/:episodeId/edit"
+          element={
+            <ProtectedRoute>
+              <EditorPage />
             </ProtectedRoute>
           }
         />
