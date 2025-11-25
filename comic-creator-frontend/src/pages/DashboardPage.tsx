@@ -11,6 +11,7 @@ import {
 import { useAuthStore } from '@/stores/authStore';
 import { useSeriesStore } from '@/stores/seriesStore';
 import { SeriesCard } from '@/components/series/SeriesCard';
+import { SeriesFormDialog } from '@/components/series/SeriesFormDialog';
 import { AnimatePresence } from 'framer-motion';
 import type { Series } from '@/types';
 
@@ -22,6 +23,8 @@ export function DashboardPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [showSeriesDialog, setShowSeriesDialog] = useState(false);
+  const [editingSeries, setEditingSeries] = useState<Series | null>(null);
 
   // Load series on mount
   useEffect(() => {
@@ -34,13 +37,18 @@ export function DashboardPage() {
   };
 
   const handleCreateSeries = () => {
-    // TODO: Open create series dialog
-    console.log('Create series clicked');
+    setEditingSeries(null);
+    setShowSeriesDialog(true);
   };
 
-  const handleEditSeries = (editSeries: Series) => {
-    // TODO: Open edit series dialog
-    console.log('Edit series:', editSeries.series_id);
+  const handleEditSeries = (series: Series) => {
+    setEditingSeries(series);
+    setShowSeriesDialog(true);
+  };
+
+  const handleCloseDialog = () => {
+    setShowSeriesDialog(false);
+    setEditingSeries(null);
   };
 
   // Filter series
@@ -223,6 +231,13 @@ export function DashboardPage() {
           </div>
         )}
       </main>
+
+      {/* Series Form Dialog */}
+      <SeriesFormDialog
+        open={showSeriesDialog}
+        onClose={handleCloseDialog}
+        series={editingSeries}
+      />
     </div>
   );
 }
