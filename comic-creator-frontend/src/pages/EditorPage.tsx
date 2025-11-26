@@ -19,6 +19,8 @@ import { PropertiesPanel } from '@/components/editor/PropertiesPanel';
 import { ExportDialog } from '@/components/editor/ExportDialog';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
+import { useAutoSave } from '@/hooks/useAutoSave';
+import { SaveIndicator } from '@/components/editor/SaveIndicator';
 import { toast } from 'react-hot-toast';
 
 export function EditorPage() {
@@ -28,6 +30,37 @@ export function EditorPage() {
 
     useKeyboardShortcuts();
 
+    // Auto-save every 30 seconds
+    useAutoSave({
+        enabled: true,
+        interval: 30000,
+        onSaveStart: () => {
+            console.log('🔄 Auto-saving...');
+        },
+        onSaveSuccess: () => {
+            toast.success('Auto-saved', {
+                style: {
+                    background: '#1F2937',
+                    color: '#fff',
+                    borderRadius: '8px',
+                    border: '1px solid #374151',
+                },
+                duration: 2000,
+                icon: '💾',
+            });
+        },
+        onSaveError: (error) => {
+            toast.error(`Auto-save failed: ${error.message}`, {
+                style: {
+                    background: '#1F2937',
+                    color: '#fff',
+                    borderRadius: '8px',
+                    border: '1px solid #374151',
+                },
+            });
+        }
+    });
+
     const {
         episode,
         pages,
@@ -36,7 +69,6 @@ export function EditorPage() {
         isSaving,
         error,
         isDirty,
-        lastSaved,
         loadEpisode,
         saveEpisode,
         selectPage,
@@ -88,14 +120,7 @@ export function EditorPage() {
         }
     };
 
-    const formatLastSaved = () => {
-        if (!lastSaved) return 'Not saved';
 
-        const seconds = Math.floor((Date.now() - lastSaved.getTime()) / 1000);
-        if (seconds < 60) return 'Saved just now';
-        if (seconds < 3600) return `Saved ${Math.floor(seconds / 60)}m ago`;
-        return `Saved ${Math.floor(seconds / 3600)}h ago`;
-    };
 
     // Loading state
     if (isLoading) {
@@ -158,9 +183,7 @@ export function EditorPage() {
 
                     <div>
                         <h1 className="text-white font-medium">{episode.title}</h1>
-                        <p className="text-xs text-gray-400">
-                            {isDirty ? '● Unsaved changes' : formatLastSaved()}
-                        </p>
+
                     </div>
                 </div>
 
@@ -193,6 +216,8 @@ export function EditorPage() {
 
                 {/* Right Section */}
                 <div className="flex items-center gap-3">
+                    <SaveIndicator />
+
                     <button
                         onClick={() => setShowExportDialog(true)}
                         className="flex items-center gap-2 px-3 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors"
