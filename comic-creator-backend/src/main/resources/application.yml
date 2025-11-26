@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: comic-creator-backend
+  profiles:
+    active: dev
+
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+
+# Default values (overridden by profile-specific configs)
+app:
+  jwt:
+    secret: ${JWT_SECRET:ComicCreatorSecretKeyForDevelopmentOnlyPleaseChangeInProduction123456789012345678901234567890}
+    access-token-expiration: 86400000  # 24 hours
+    refresh-token-expiration: 604800000  # 7 days
+  cors:
+    allowed-origins: http://localhost:5173,http://localhost:3000
+  credits:
+    initial-balance: 10
+    panel-generation-cost: 1
+    high-quality-cost: 2
